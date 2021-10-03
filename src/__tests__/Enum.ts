@@ -1,18 +1,18 @@
-import { Enum, Variant } from '..'
+import { Enum } from '..'
 
 
 describe('Enum', () => {
-  let CounterAction = Enum(
-    Variant('INC'),
-    Variant('DEC'),
-    Variant('RESET', (resetTo?: number)=> resetTo ?? 0)
-  )
+  let CounterAction = Enum({
+    INC: null,
+    DEC: null,
+    RESET: (resetTo?: number)=> resetTo ?? 0,
+  })
   beforeEach(() => {
-    CounterAction = Enum(
-      Variant('INC'),
-      Variant('DEC'),
-      Variant('RESET', (resetTo?: number)=> resetTo ?? 0)
-    )
+    CounterAction = Enum({
+      INC: null,
+      DEC: null,
+      RESET: (resetTo?: number)=> resetTo ?? 0,
+    })
   })
 
   it('should be same reference for Variant has no payload', () => {
@@ -31,6 +31,12 @@ describe('Enum', () => {
       resetAction.payload = 99
     }).toThrowError()
     expect(resetAction.payload).toBe(0)
+  })
+
+  it(`should throw when visit Enum#$type$`, () => {
+    expect(() => {
+      CounterAction.$type$
+    }).toThrowError()
   })
 })
 

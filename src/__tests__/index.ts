@@ -1,14 +1,14 @@
-import { Enum, Variant } from '..'
+import { Enum } from '..'
 
 
 describe('example', () => {
   test('redux-like', () => {
-    const CounterAction = Enum(
-      Variant('INC'),
-      Variant('DEC'),
-      Variant('RESET', (resetTo?: number)=> resetTo ?? 0)
-    )
-    
+    const CounterAction = Enum({
+      INC: null,
+      DEC: null,
+      RESET: (resetTo?: number)=> resetTo ?? 0,
+    })
+
     type CounterAction = typeof CounterAction.$type$
     
     function reducer(state = { count: 0 }, action: CounterAction) {

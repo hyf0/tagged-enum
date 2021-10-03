@@ -1,51 +1,42 @@
 
 type AnyFn = (...args: any[]) => any;
 
-type MapVariantDescToVariantConsturctor<T> = T extends {
-  type: string
-  payloadMaker: AnyFn
-}
-  ? (...params: Parameters<T['payloadMaker']>) => Readonly<{
-    type:  T['type']
-    payload: ReturnType<T['payloadMaker']>
+type MapVariantDescToVariantConsturctor<T, P> = P extends AnyFn
+  ? (...params: Parameters<P>) => Readonly<{
+    type:  T
+    payload: ReturnType<P>
   }>
-  : T extends {
-    type: string
-    payloadMaker?: undefined
-  }
-  ? Readonly<{ type: T['type'] }>
+  : P extends null
+  ? Readonly<{ type: T }>
   : never
 
-type MapVariantDescToVariant<T> = T extends {
-  type: string
-  payloadMaker: AnyFn
-}
+  type MapVariantDescToVariant<T, P> = P extends AnyFn
   ? Readonly<{
-    type: T['type']
-    payload: ReturnType<T['payloadMaker']>
+    type:  T
+    payload: ReturnType<P>
   }>
-  : T extends {
-    type: string
-  }
-  ? Readonly<{ type: T['type'] }>
+  : P extends null
+  ? Readonly<{ type: T }>
   : never
+
+type MapVariantDescToVarianUnion<T> = {
+  [K in keyof T]: MapVariantDescToVariant<K, T[K]>
+}[keyof T]
 
 
 
 export function Enum<
-  VariantDescList extends VariantDesc[],
-  >(...variantDescList: VariantDescList) {
-  type VariantDescUnion = VariantDescList[number]
-  type VariantUnion = MapVariantDescToVariant<VariantDescUnion>
+  VariantDesc extends {
+    [key: string]: null | AnyFn
+  },
+  >(variantDesc: VariantDesc) {
+  type VariantUnion = MapVariantDescToVarianUnion<VariantDesc>
   type EnumInstance = {
-    [K in VariantDescUnion['type']]: MapVariantDescToVariantConsturctor<
-      Extract<VariantDescUnion, { type: K }>
-    >
+    [K in keyof VariantDesc]: MapVariantDescToVariantConsturctor<K, VariantDesc[K]>
   }
 
   let instance = {} as any
-  variantDescList.forEach((v) => {
-    const { type, payloadMaker } = v
+  Object.entries(variantDesc).forEach(([type, payloadMaker]) => {
     if (payloadMaker) {
       instance[type] = (...args: any[]) => {
         return Object.freeze({
@@ -61,40 +52,16 @@ export function Enum<
     }
   })
 
+  Object.defineProperties(instance, {
+    '$type$': {
+      get() {
+        throw new TypeError('Enum#$type$ is only exist in type space. Do not visit it on runtime.')
+      }
+    }
+  })
 
   type Result = EnumInstance & {
     $type$: VariantUnion
   }
   return instance! as Result
-}
-type GetEnumUnion<
-  T extends {
-    $type$: any
-  },
-  > = T['$type$']
-
-type VariantDesc = { type: string, payloadMaker?: AnyFn }
-
-export function Variant<Tag extends string>(type: Tag): { type: Tag }
-export function Variant<
-  Tag extends string,
-  PayloadMaker extends (...args: any) => any,
-  >(
-    type: Tag,
-    payloadMaker: PayloadMaker,
-): { type: Tag; payloadMaker: PayloadMaker }
-export function Variant(
-  type: string,
-  payloadMaker?: (...args: any) => any,
-): VariantDesc {
-  if (payloadMaker) {
-    return {
-      type: type,
-      payloadMaker,
-    }
-  } else {
-    return {
-      type: type,
-    }
-  }
 }
