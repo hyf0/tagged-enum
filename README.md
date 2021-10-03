@@ -52,9 +52,9 @@ type StringOperation = typeof StringOperation.$type$
 
 function reducer(state = {value: ''}, action: StringOperation) {
   return match(action)({
-    INIT: () => 'hello, world',
-    CONCAT: ([a, b]) => a + b,
-    FROM_NUMBER: (input) => String(input),
+    INIT: () => ({...state, value: 'hello, world'}),
+    CONCAT: ([a, b]) => ({...state, value: a + b}),
+    FROM_NUMBER: (input) => ({...state, value: String(input)}),
   })
 }
 ```
