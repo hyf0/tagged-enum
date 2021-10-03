@@ -42,6 +42,7 @@ function reducer(state = {value: ''}, action: StringOperation) {
     case 'CONCAT': return {...state, value: action.payload[0] + action.payload[1]},
     // typescript will infer `action.payload` as number
     case 'FROM_NUMBER': return {...state, value: String(action.payload)},
+    default: return state
   }
 }
 ```
@@ -61,6 +62,7 @@ function reducer(state = {value: ''}, action: StringOperation) {
     INIT: () => ({...state, value: 'hello, world'}),
     CONCAT: ([a, b]) => ({...state, value: a + b}),
     FROM_NUMBER: (input) => ({...state, value: String(input)}),
+    _: () => state,
   })
 }
 ```
