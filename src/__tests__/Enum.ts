@@ -1,17 +1,18 @@
 import { Enum } from '..'
 
-
 describe('Enum', () => {
   let CounterAction = Enum({
     INC: null,
     DEC: null,
-    RESET: (resetTo?: number)=> resetTo ?? 0,
+    RESET: (resetTo?: number) => resetTo ?? 0,
+    FROM_STRING: (input: string) => input,
   })
   beforeEach(() => {
     CounterAction = Enum({
       INC: null,
       DEC: null,
-      RESET: (resetTo?: number)=> resetTo ?? 0,
+      RESET: (resetTo?: number) => resetTo ?? 0,
+      FROM_STRING: (input: string) => input,
     })
   })
 
@@ -25,7 +26,7 @@ describe('Enum', () => {
   })
 
   it(`should be freezed for all Variant`, () => {
-    const resetAction = CounterAction.RESET(0);
+    const resetAction = CounterAction.RESET(0)
     expect(() => {
       // @ts-expect-error
       resetAction.payload = 99
@@ -39,4 +40,3 @@ describe('Enum', () => {
     }).toThrowError()
   })
 })
-

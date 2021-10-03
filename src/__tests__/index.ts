@@ -1,41 +1,45 @@
-import { Enum } from '..'
-
+import { Enum, match } from '..'
 
 describe('example', () => {
   test('redux-like', () => {
-    const CounterAction = Enum({
-      INC: null,
-      DEC: null,
-      RESET: (resetTo?: number)=> resetTo ?? 0,
+    // non-exhaustive
+    
+
+    // non-exhaustive
+    const StringOperation = Enum({
+      INIT: null,
+      CONCAT: (a: string, b: string) => [a, b] as const,
+      FROM_NUMBER: (input: number) => input,
+    })
+    type StringOperation = typeof StringOperation.$type$
+    let str = match(StringOperation.INIT as StringOperation)({ // => 'hello'
+      INIT: () => 'hello',
+      _: () => '',
+    })
+    str = match(StringOperation.INIT as StringOperation)({ // => 'default'
+      // INIT: () => 'hello',
+      _: () => 'default',
+    })
+  })
+
+  test('redux-like', () => {
+    // exhaustive
+    const StringOperation = Enum({
+      INIT: null,
+      CONCAT: (a: string, b: string) => [a, b] as const,
+      FROM_NUMBER: (input: number) => input,
+    })
+    type StringOperation = typeof StringOperation.$type$
+    // compiling error occurs
+    // @ts-expect-error
+    let str = match(StringOperation.INIT as StringOperation)({ // => 'hello'
+      INIT: () => 'hello',
     })
 
-    type CounterAction = typeof CounterAction.$type$
-    
-    function reducer(state = { count: 0 }, action: CounterAction) {
-      switch(action.type) {
-        case 'INC': return { ...state, count: state.count += 1  }
-        case 'DEC': return { ...state, count: state.count -= 1  }
-        case 'RESET': return { ...state, count: action.payload   }
-        default: return state
-      }
-      return state
-    }
-    
-    let state = { count: 0 }
-    
-    function dispatch(action: CounterAction) {
-      state = reducer(state, action)
-    }
-    
-    dispatch(CounterAction.INC)
-    dispatch(CounterAction.INC)
-    dispatch(CounterAction.DEC)
-    expect(state.count).toBe(1)
-
-    dispatch(CounterAction.RESET(99))
-    expect(state.count).toBe(99)
-
-    dispatch(CounterAction.RESET())
-    expect(state.count).toBe(0)
+    str = match(StringOperation.INIT as StringOperation)({ // => 'default'
+      INIT: () => 'hello',
+      CONCAT: ([a, b]) => a + b,
+      FROM_NUMBER: (input) => String(input)
+    })
   })
 })

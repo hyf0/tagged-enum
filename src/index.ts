@@ -1,20 +1,21 @@
+export { match } from './match'
 
-type AnyFn = (...args: any[]) => any;
+type AnyFn = (...args: any[]) => any
 
 type MapVariantDescToVariantConsturctor<T, P> = P extends AnyFn
   ? (...params: Parameters<P>) => Readonly<{
-    type:  T
-    payload: ReturnType<P>
-  }>
+      type: T
+      payload: ReturnType<P>
+    }>
   : P extends null
   ? Readonly<{ type: T }>
   : never
 
-  type MapVariantDescToVariant<T, P> = P extends AnyFn
+type MapVariantDescToVariant<T, P> = P extends AnyFn
   ? Readonly<{
-    type:  T
-    payload: ReturnType<P>
-  }>
+      type: T
+      payload: ReturnType<P>
+    }>
   : P extends null
   ? Readonly<{ type: T }>
   : never
@@ -23,16 +24,17 @@ type MapVariantDescToVarianUnion<T> = {
   [K in keyof T]: MapVariantDescToVariant<K, T[K]>
 }[keyof T]
 
-
-
 export function Enum<
   VariantDesc extends {
     [key: string]: null | AnyFn
   },
-  >(variantDesc: VariantDesc) {
+>(variantDesc: VariantDesc) {
   type VariantUnion = MapVariantDescToVarianUnion<VariantDesc>
   type EnumInstance = {
-    [K in keyof VariantDesc]: MapVariantDescToVariantConsturctor<K, VariantDesc[K]>
+    [K in keyof VariantDesc]: MapVariantDescToVariantConsturctor<
+      K,
+      VariantDesc[K]
+    >
   }
 
   let instance = {} as any
@@ -48,16 +50,17 @@ export function Enum<
       instance[type] = Object.freeze({
         type,
       })
-
     }
   })
 
   Object.defineProperties(instance, {
-    '$type$': {
+    $type$: {
       get() {
-        throw new TypeError('Enum#$type$ is only exist in type space. Do not visit it on runtime.')
-      }
-    }
+        throw new TypeError(
+          'Enum#$type$ is only exist in type space. Do not visit it on runtime.',
+        )
+      },
+    },
   })
 
   type Result = EnumInstance & {
