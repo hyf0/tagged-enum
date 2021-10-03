@@ -4,6 +4,12 @@ see `src/__test__` or [codesandbox](https://codesandbox.io/s/crazy-dijkstra-0nsm
 
 # usage
 
+```
+yarn add tagged-enum
+// or
+npm i tagged-enum
+```
+
 ## Construct Enum
 
 ```ts
