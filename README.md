@@ -151,7 +151,6 @@ type Option = typeof Option.$type$;
 ```ts
 const OptionNumber = Enum({
   None: null,
-  // `T` will be infered as `unknown`
   Some: (value: number) => ({ value }),
 })
 type OptionNumber = typeof OptionNumber.$type$;
