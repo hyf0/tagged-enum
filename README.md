@@ -2,7 +2,7 @@
 
 see `src/__test__` or [codesandbox](https://codesandbox.io/s/crazy-dijkstra-0nsmm?file=/src/index.ts)
 
-# usage
+# Install
 
 ```
 yarn add tagged-enum
@@ -10,106 +10,149 @@ yarn add tagged-enum
 npm i tagged-enum
 ```
 
-## Construct Enum
+# Usage
+
+## Defining an Enum
+
+### Ip Address
 
 ```ts
-const StringOperation = Enum({
-  INIT: null,
-  CONCAT: (a: string, b: string) => [a, b] as const,
-  FROM_NUMBER: (input: number) => input,
+const IpAddr = Enum({
+  V4: (a: number, b: number, c: number, d: number) => [a, b, c, d] as const,
+  V6: (addr: string) => addr,
 })
-type StringOperation = typeof StringOperation.$type$
 
-const init = StringOperation.INIT // => { type:INIT }
-const concat = StringOperation.CONCAT('hello, ', 'world') // => { type:CONCAT, payload: ['hello, ', 'world'] }
-const fromNumber = StringOperation.FROM_NUMBER(0) // => { type:FROM_NUMBER, payload: 0 }
+type IpAddr = typeof IpAddr.$type$
+
+const home = IpAddr.V4(127, 0, 0, 1);
+
+const loopback = IpAddr.V6('::1');
 ```
 
-## using with switch
+### Animal
 
 ```ts
-const StringOperation = Enum({
-  INIT: null,
-  CONCAT: (a: string, b: string) => [a, b] as const,
-  FROM_NUMBER: (input: number) => input,
+const Animal = Enum({
+    Fox: null,
+    Rabbit: null,
+    Custom: (species: string) => species,
 })
-type StringOperation = typeof StringOperation.$type$
 
-function reducer(state = {value: ''}, action: StringOperation) {
-  switch (action.type) {
-    case 'INIT': return {...state, value: 'hello, world'},
-    // typescript will infer `action.payload` as [string, string]
-    case 'CONCAT': return {...state, value: action.payload[0] + action.payload[1]},
-    // typescript will infer `action.payload` as number
-    case 'FROM_NUMBER': return {...state, value: String(action.payload)},
-    default: return state
-  }
+const nick = Animal.Fox
+const judy = Animal.Rabbit
+const flash = Animal.Custom('sloth')
+```
+
+## `match`
+
+### Coin
+
+```ts
+const Coin = Enum({
+  Penny: null,
+  Nickel: null,
+  Dime: null,
+  Quarter: null,
+});
+type Coin = typeof Coin.$type$;
+
+function value_in_cents(coin: Coin): number {
+  return match(coin)({
+    Penny: () => {
+      console.log("Lucky penny!");
+      return 1
+    },
+    Nickel: () => 5,
+    Dime: () => 10,
+    Quarter: () => 25,
+  });
 }
 ```
 
-## using with `match`
+## Exhaustive matching
 
 ```ts
-const StringOperation = Enum({
-  INIT: null,
-  CONCAT: (a: string, b: string) => [a, b] as const,
-  FROM_NUMBER: (input: number) => input,
-})
-type StringOperation = typeof StringOperation.$type$
+const Coin = Enum({
+  Penny: null,
+  Nickel: null,
+  Dime: null,
+  Quarter: null,
+});
+type Coin = typeof Coin.$type$;
 
-function reducer(state = {value: ''}, action: StringOperation) {
-  return match(action)({
-    INIT: () => ({...state, value: 'hello, world'}),
-    CONCAT: ([a, b]) => ({...state, value: a + b}),
-    FROM_NUMBER: (input) => ({...state, value: String(input)}),
-    _: () => state,
-  })
+// Missing match arm for `Quarter`. Compiling error occurs.
+function value_in_cents(coin: Coin): number {
+  return match(coin)({
+    Penny: () => {
+      console.log("Lucky penny!");
+      return 1
+    },
+    Nickel: () => 5,
+    Dime: () => 10,
+    // Quarter: () => 25,
+  });
 }
 ```
 
-## exhaustive matching
+### Using `_` to catch cases aren't specified
 
 ```ts
-// exhaustive
-const StringOperation = Enum({
-  INIT: null,
-  CONCAT: (a: string, b: string) => [a, b] as const,
-  FROM_NUMBER: (input: number) => input,
-})
-type StringOperation = typeof StringOperation.$type$
+const Coin = Enum({
+  Penny: null,
+  Nickel: null,
+  Dime: null,
+  Quarter: null,
+});
+type Coin = typeof Coin.$type$;
 
-// @ts-expect-error
-let str = match(StringOperation.INIT as StringOperation)({ // => compiling error occurs
-  INIT: () => 'hello',
-})
-
-// no compiling error occurs
-str = match(StringOperation.INIT as StringOperation)({ // => 'default'
-  INIT: () => 'hello',
-  CONCAT: ([a, b]) => a + b,
-  FROM_NUMBER: (input) => String(input)
-})
+// With `_`, the missing match arms won't causes compiling errors.
+function value_in_cents(coin: Coin): number {
+  return match(coin)({
+    Penny: () => {
+      console.log("Lucky penny!");
+      return 1
+    },
+    // Nickel: () => 5,
+    // Dime: () => 10,
+    // Quarter: () => 25,
+    _: () => 0,
+  });
+}
 ```
 
-## non-exhaustive matching
+# Limitation
+
+tagged-enum is implemented in userland, not a built-in language feature. So, there are some limitations.
+
+## Recursive Type
 
 ```ts
-const StringOperation = Enum({
-  INIT: null,
-  CONCAT: (a: string, b: string) => [a, b] as const,
-  FROM_NUMBER: (input: number) => input,
+// List implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer ts(7022)
+const List = Enum({
+  Nil: null,
+  Cons: (contains: number, tail: List) => ({ contains, tail, })
 })
-type StringOperation = typeof StringOperation.$type$
+type List = typeof List.$type$;
+```
 
-// no compiling error occurs
-let str = match(StringOperation.INIT as StringOperation)({ // => 'hello'
-  INIT: () => 'hello',
-  _: () => '',
-})
+## Generic Type
 
-// no compiling error occurs
-str = match(StringOperation.INIT as StringOperation)({ // => 'default'
-  // INIT: () => 'hello',
-  _: () => 'default',
+```ts
+const Option = Enum({
+  None: null,
+  // `T` will be infered as `unkown`
+  Some: <T>(value: T) => ({ value }),
 })
+type Option = typeof Option.$type$;
+```
+
+### Workaround
+
+```ts
+const OptionNumber = Enum({
+  None: null,
+  // `T` will be infered as `unknown`
+  Some: (value: number) => ({ value }),
+})
+type OptionNumber = typeof OptionNumber.$type$;
 ```
