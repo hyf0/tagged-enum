@@ -1,6 +1,6 @@
 {
   "name": "tagged-enum",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "dist/index.js",
   "repository": "https://github.com/iheyunfei/tagged-enum.git",
   "author": "YunfeiHe <i.heyunfei@gmail.com>",

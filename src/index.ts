@@ -2,16 +2,13 @@ export { match } from './match'
 
 type AnyFn = (...args: any[]) => any
 
-type MapVariantDescToVariantConsturctor<T, P> = P extends AnyFn
-  ? (...params: Parameters<P>) => Readonly<{
-      type: T
-      payload: ReturnType<P>
-    }>
+type MapVariantDescItemToVariantConsturctor<T, P, VariantDesc> = P extends AnyFn
+  ? (...params: Parameters<P>) => MapVariantDescToVarianUnion<VariantDesc>
   : P extends null
-  ? Readonly<{ type: T }>
+  ? MapVariantDescToVarianUnion<VariantDesc>
   : never
 
-type MapVariantDescToVariant<T, P> = P extends AnyFn
+type MapVariantDescItemToVariant<T, P> = P extends AnyFn
   ? Readonly<{
       type: T
       payload: ReturnType<P>
@@ -20,9 +17,9 @@ type MapVariantDescToVariant<T, P> = P extends AnyFn
   ? Readonly<{ type: T }>
   : never
 
-type MapVariantDescToVarianUnion<T> = {
-  [K in keyof T]: MapVariantDescToVariant<K, T[K]>
-}[keyof T]
+type MapVariantDescToVarianUnion<VariantDesc> = {
+  [K in keyof VariantDesc]: MapVariantDescItemToVariant<K, VariantDesc[K]>
+}[keyof VariantDesc]
 
 export function Enum<
   VariantDesc extends {
@@ -31,9 +28,10 @@ export function Enum<
 >(variantDesc: VariantDesc) {
   type VariantUnion = MapVariantDescToVarianUnion<VariantDesc>
   type EnumInstance = {
-    [K in keyof VariantDesc]: MapVariantDescToVariantConsturctor<
+    [K in keyof VariantDesc]: MapVariantDescItemToVariantConsturctor<
       K,
-      VariantDesc[K]
+      VariantDesc[K],
+      VariantDesc
     >
   }
 

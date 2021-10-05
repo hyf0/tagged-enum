@@ -31,7 +31,7 @@ describe('Enum', () => {
       // @ts-expect-error
       resetAction.payload = 99
     }).toThrowError()
-    expect(resetAction.payload).toBe(0)
+    expect(resetAction.type === 'RESET' && resetAction.payload).toBe(0)
   })
 
   it(`should throw when visit Enum#$type$`, () => {
