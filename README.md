@@ -2,6 +2,8 @@
 
 see `src/__test__` or [codesandbox](https://codesandbox.io/s/crazy-dijkstra-0nsmm?file=/src/index.ts)
 
+- Todo + React Redux [codesandbox](https://codesandbox.io/s/goofy-tree-cp6xt)/[github](https://github.com/iheyunfei/tagged-enum-redux-example)
+
 # Install
 
 ```
