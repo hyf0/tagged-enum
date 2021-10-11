@@ -25,13 +25,10 @@ export function match<Variant extends AnyVariant>(variant: Variant) {
     let defaultMatchArm = matcher['_']
     if (!isValidVariant(variant)) {
       if (defaultMatchArm) {
-        // TODO: should we call defaultMatchArm for non-valid input for non-exhaustive matching?
-        // defaultMatchArm()
-        throw new TypeError(`Got non-valid varint ${variant}`)
+        defaultMatchArm()
       } else {
         // throw when exhaustive checking
-        throw new TypeError(`Got non-valid varint ${variant}`)
-        // throw new TypeError(`Got non-valid varint ${variant} for exhaustive matching, try non-exhaustive matching instead`)
+        throw new TypeError(`Got non-valid varint ${variant} for exhaustive matching, try using \`_\` to catch invalid varint`)
       }
     }
 
