@@ -1,66 +1,85 @@
 type AnyFn = (...args: any[]) => any
+type VariantFactory = AnyFn
 
-type MapVariantDescItemToVariantConsturctor<T, P, VariantDesc> = P extends AnyFn
-  ? (...params: Parameters<P>) => MapVariantDescToVarianUnion<VariantDesc>
-  : P extends null
-  ? MapVariantDescToVarianUnion<VariantDesc>
-  : never
+export type VariantNameMark = '$type$'
 
-type MapVariantDescItemToVariant<T, P> = P extends AnyFn
-  ? Readonly<{
-      type: T
-      payload: ReturnType<P>
-    }>
-  : P extends null
-  ? Readonly<{ type: T }>
-  : never
+type VariantConsturctorFromInput<
+  VariantName extends string,
+  VariantInfo extends { [key: string]: VariantFactory | null },
+> = VariantInfo[VariantName] extends VariantFactory
+  ? {
+      (
+        ...params: Parameters<VariantInfo[VariantName]>
+      ): VariantUnionFromInput<VariantInfo>
+      $type$: VariantName
+    }
+  : {
+    (): VariantUnionFromInput<VariantInfo>
+    $type$: VariantName
+  }
 
-type MapVariantDescToVarianUnion<VariantDesc> = {
-  [K in keyof VariantDesc]: MapVariantDescItemToVariant<K, VariantDesc[K]>
-}[keyof VariantDesc]
+type VariantFromInput<VariantName, VariantConstructor> =
+  VariantConstructor extends VariantFactory
+    ? Readonly<{
+        type: VariantName
+        payload: ReturnType<VariantConstructor>
+      }>
+    : VariantConstructor extends null
+    ? Readonly<{ type: VariantName }>
+    : never
+
+type VariantUnionFromInput<VariantInput> = {
+  [VariantName in keyof VariantInput]: VariantFromInput<
+    VariantName,
+    VariantInput[VariantName]
+  >
+}[keyof VariantInput]
+
+const enumBase = Object.freeze({
+  get $type$() {
+    throw new TypeError(
+      'Enum#$type$ is only exist in type space. Do not visit it on runtime.',
+    )
+  },
+})
 
 export function Enum<
-  VariantDesc extends {
+  VariantInput extends {
     [key: string]: null | AnyFn
   },
->(variantDesc: VariantDesc) {
-  type VariantUnion = MapVariantDescToVarianUnion<VariantDesc>
+>(variantInput: VariantInput) {
+  type VariantUnion = VariantUnionFromInput<VariantInput>
   type EnumInstance = {
-    [K in keyof VariantDesc]: MapVariantDescItemToVariantConsturctor<
-      K,
-      VariantDesc[K],
-      VariantDesc
+    [VariantName in keyof VariantInput]: VariantConsturctorFromInput<
+      VariantName & string,
+      VariantInput
     >
   }
 
-  let instance = {} as any
-  Object.entries(variantDesc).forEach(([type, payloadMaker]) => {
-    if (payloadMaker) {
-      instance[type] = (...args: any[]) => {
+  const instance = Object.create(enumBase)
+  for (let variantName in variantInput) {
+    const variantConstructor = variantInput[variantName]
+    if (typeof variantConstructor === 'function') {
+      instance[variantName] = (...args: any[]) => {
         return Object.freeze({
-          type,
-          payload: payloadMaker(...args),
+          type: variantName,
+          payload: variantConstructor(...args),
         })
       }
-    } else {
-      instance[type] = Object.freeze({
-        type,
+    } else if (variantConstructor === null) {
+      const variant = Object.freeze({
+        type: variantName,
       })
+      instance[variantName] = () => variant
+    } else {
+      throw new TypeError(
+        `Expect \`null\` | \`function\` but got ${typeof variantConstructor}`,
+      )
     }
-  })
-
-  Object.defineProperties(instance, {
-    $type$: {
-      get() {
-        throw new TypeError(
-          'Enum#$type$ is only exist in type space. Do not visit it on runtime.',
-        )
-      },
-    },
-  })
+  }
 
   type Result = EnumInstance & {
     $type$: VariantUnion
   }
-  return instance! as Result
+  return instance as Result
 }

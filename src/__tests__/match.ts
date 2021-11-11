@@ -37,9 +37,9 @@ describe('match', () => {
         state = reducer(state, action)
       }
 
-      dispatch(CounterAction.INC)
-      dispatch(CounterAction.INC)
-      dispatch(CounterAction.DEC)
+      dispatch(CounterAction.INC())
+      dispatch(CounterAction.INC())
+      dispatch(CounterAction.DEC())
       expect(state.count).toBe(1)
 
       dispatch(CounterAction.RESET(99))
@@ -78,20 +78,18 @@ describe('match', () => {
   })
 
   describe('non-exhaustive', () => {
-    it('should throw error for non-valid input', () => {
-      expect(() => {
-        match({} as CounterAction)({
-          // INC: () => ({}),
-          DEC: () => ({}),
-          RESET: (payload) => ({}),
-          FROM_STRING: (payload) => ({}),
-          _: () => ({})
-        })
-      }).toThrowError()
+    it('should fallback to default maching arm for non-valid input', () => {
+      expect(match({} as CounterAction)({
+        // INC: () => ({}),
+        DEC: () => ({}),
+        RESET: (payload) => ({}),
+        FROM_STRING: (payload) => ({}),
+        _: () => (1)
+      })).toBe(1)
     })
     it('should fallback to default match arm for non-exist match arm', () => {
       expect(
-        match(CounterAction.INC as CounterAction)({
+        match(CounterAction.INC())({
           // INC: () => ({ ...state, count: state.count += 1  }),
           DEC: () => 0,
           RESET: (_payload) => 0,
@@ -102,7 +100,7 @@ describe('match', () => {
     })
     it('should not fallback to default match arm for exist match arm', () => {
       expect(
-        match(CounterAction.DEC as CounterAction)({
+        match(CounterAction.DEC())({
           // INC: () => ({ ...state, count: state.count += 1  }),
           DEC: () => -1,
           RESET: (_payload) => 0,
@@ -110,6 +108,21 @@ describe('match', () => {
           _: () => 1,
         }),
       ).toBe(-1)
+    })
+
+    it('should fallback to default match arm for non-valid input', () => {
+      expect(
+        // @ts-expect-error
+        match(1)({
+          // INC: () => ({ ...state, count: state.count += 1  }),
+          DEC: () => -1,
+          // @ts-expect-error
+          RESET: (_payload) => 0,
+          // @ts-expect-error
+          FROM_STRING: (_payload) => 0,
+          _: () => 1,
+        }),
+      ).toBe(1)
     })
   })
 })

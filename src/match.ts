@@ -1,4 +1,4 @@
-import { isUndefined, isValidVariant } from './helper'
+import { isVariantLike } from './helper'
 
 type AnyVariant = {
   type: string
@@ -13,6 +13,7 @@ type MapVariantToMatcher<T extends AnyVariant, ReturnValue> = {
 }
 
 export function match<Variant extends AnyVariant>(variant: Variant) {
+  // exhaustive matching
   function matchImpl<ReturnValue>(
     matcher: Partial<MapVariantToMatcher<Variant, ReturnValue>> & {
       _: () => ReturnValue
@@ -23,9 +24,9 @@ export function match<Variant extends AnyVariant>(variant: Variant) {
   ): ReturnValue
   function matchImpl(matcher: Record<string, AnyFn | undefined>) {
     let defaultMatchArm = matcher['_']
-    if (!isValidVariant(variant)) {
-      if (defaultMatchArm) {
-        defaultMatchArm()
+    if (!isVariantLike(variant)) {
+      if (defaultMatchArm != null) {
+        return defaultMatchArm()
       } else {
         // throw when exhaustive checking
         throw new TypeError(`Got non-valid varint ${variant} for exhaustive matching, try using \`_\` to catch invalid varint`)
@@ -33,8 +34,8 @@ export function match<Variant extends AnyVariant>(variant: Variant) {
     }
 
     let matcherArm = matcher[variant.type]
-    if (isUndefined(matcherArm)) {
-      if (isUndefined(defaultMatchArm)) {
+    if (matcherArm == null) {
+      if (defaultMatchArm == null) {
         throw new Error(
           `Doesn't found any match arm for variant ${variant}. Try non-exhaustive matching instead`,
         )
@@ -43,7 +44,7 @@ export function match<Variant extends AnyVariant>(variant: Variant) {
       }
     }
 
-    return isUndefined(variant.payload)
+    return typeof variant.payload === 'undefined'
       ? matcherArm()
       : matcherArm(variant.payload)
   }

@@ -39,4 +39,13 @@ describe('Enum', () => {
       CounterAction.$type$
     }).toThrowError()
   })
+
+  it(`should throw when received non-valid input `, () => {
+    expect(() => {
+      Enum({
+        // @ts-expect-error
+        FOO: '1',
+      })
+    }).toThrowError()
+  })
 })

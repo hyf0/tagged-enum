@@ -1,10 +1,8 @@
-export const isUndefined = (target: unknown): target is undefined =>
-  typeof target === 'undefined'
-
-export const isValidVariant = (target: Record<string, any>): boolean => {
+export const isVariantLike = <T extends any>(target: T): target is T & { type: string } => {
   return (
     typeof target === 'object' &&
     target !== null &&
+    // @ts-ignore
     typeof target.type === 'string'
   )
 }
