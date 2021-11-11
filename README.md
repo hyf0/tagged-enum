@@ -40,8 +40,8 @@ const Animal = Enum({
     Custom: (species: string) => species,
 })
 
-const nick = Animal.Fox
-const judy = Animal.Rabbit
+const nick = Animal.Fox()
+const judy = Animal.Rabbit()
 const flash = Animal.Custom('sloth')
 ```
 
@@ -120,6 +120,31 @@ function value_in_cents(coin: Coin): number {
     _: () => 0,
   });
 }
+```
+
+## `isVariantOf`
+
+```ts
+import { isVariantOf, Enum } from 'tagged-enum'
+
+const IpAddr = Enum({
+  V4: (a: number, b: number, c: number, d: number) => [a, b, c, d] as const,
+  V6: (addr: string) => addr,
+})
+type IpAddr = typeof IpAddr.$type$
+
+const addr: IpAddr = getCurrentAddr()
+
+if (isVariantOf(IpAddr.V4)(addr)) {
+  addr // => infer to { type: 'V4', payload: [number, number, number, number] } 
+} else {
+  addr // => infer to { type: 'V6', payload: string } 
+}
+
+
+const home = IpAddr.V4(127, 0, 0, 1);
+
+const loopback = IpAddr.V6('::1');
 ```
 
 # Limitation
