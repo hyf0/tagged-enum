@@ -1,5 +1,4 @@
-import { Enum } from '..'
-import { match } from '../match'
+import { Enum, match } from '..'
 
 describe('match', () => {
   let CounterAction = Enum({
@@ -116,9 +115,7 @@ describe('match', () => {
         match(1)({
           // INC: () => ({ ...state, count: state.count += 1  }),
           DEC: () => -1,
-          // @ts-expect-error
           RESET: (_payload) => 0,
-          // @ts-expect-error
           FROM_STRING: (_payload) => 0,
           _: () => 1,
         }),

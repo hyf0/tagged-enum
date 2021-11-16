@@ -1,8 +1,8 @@
 {
-  "name": "tagged-enum",
-  "version": "0.1.1",
+  "name": "that-enum",
+  "version": "0.0.1",
   "main": "dist/index.js",
-  "repository": "https://github.com/iheyunfei/tagged-enum.git",
+  "repository": "https://github.com/iheyunfei/that-enum.git",
   "author": "YunfeiHe <i.heyunfei@gmail.com>",
   "license": "MIT",
   "scripts": {

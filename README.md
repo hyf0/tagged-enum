@@ -1,15 +1,17 @@
-# Example
+<!-- # Example
 
 see `src/__test__` or [codesandbox](https://codesandbox.io/s/crazy-dijkstra-0nsmm?file=/src/index.ts)
 
-- Todo + React Redux [codesandbox](https://codesandbox.io/s/goofy-tree-cp6xt)/[github](https://github.com/iheyunfei/tagged-enum-redux-example)
+- Todo + React Redux [codesandbox](https://codesandbox.io/s/goofy-tree-cp6xt)/[github](https://github.com/iheyunfei/that-enum-redux-example) -->
+
+# 
 
 # Install
 
 ```
-yarn add tagged-enum
+yarn add that-enum
 // or
-npm i tagged-enum
+npm i that-enum
 ```
 
 # Usage
@@ -125,7 +127,7 @@ function value_in_cents(coin: Coin): number {
 ## `isVariantOf`
 
 ```ts
-import { isVariantOf, Enum } from 'tagged-enum'
+import { isVariantOf, Enum } from 'that-enum'
 
 const IpAddr = Enum({
   V4: (a: number, b: number, c: number, d: number) => [a, b, c, d] as const,
@@ -149,7 +151,7 @@ const loopback = IpAddr.V6('::1')
 ## `Option<T>`
 
 ```ts
-import { Option, Some, None } from 'tagged-enum'
+import { Option, Some, None } from 'that-enum'
 
 it('match', () => {
   // Some
@@ -185,7 +187,7 @@ it('match', () => {
 
 # Limitation
 
-tagged-enum is implemented in userland, not a built-in language feature. So, there are some limitations.
+that-enum is implemented in userland, not a built-in language feature. So, there are some limitations.
 
 ## Recursive Type
 
@@ -211,4 +213,4 @@ type Option = typeof Option.$type$
 
 ### Workaround
 
-`Option<T>` has been supported by `tagged-enum`.
+`Option<T>` has been supported by `that-enum`.

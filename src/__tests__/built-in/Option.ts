@@ -1,4 +1,4 @@
-import { Some, match, isVariantOf, None } from '../../'
+import { Some, match, isVariantOf, None } from '../..'
 
 describe('Option', () => {
   describe('Some', () => {
