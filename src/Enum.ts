@@ -1,3 +1,5 @@
+import { EnumInstanceBase } from "./shared"
+
 type AnyFn = (...args: any[]) => any
 type VariantFactory = AnyFn
 
@@ -35,14 +37,6 @@ type VariantUnionFromInput<VariantInput> = {
   >
 }[keyof VariantInput]
 
-const enumBase = Object.freeze({
-  get $type$() {
-    throw new TypeError(
-      'Enum#$type$ is only exist in type space. Do not visit it on runtime.',
-    )
-  },
-})
-
 export function Enum<
   VariantInput extends {
     [key: string]: null | AnyFn
@@ -56,7 +50,7 @@ export function Enum<
     >
   }
 
-  const instance = Object.create(enumBase)
+  const instance = Object.create(EnumInstanceBase)
   for (let variantName in variantInput) {
     const variantConstructor = variantInput[variantName]
     if (typeof variantConstructor === 'function') {
