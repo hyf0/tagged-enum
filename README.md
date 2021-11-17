@@ -4,7 +4,9 @@ see `src/__test__` or [codesandbox](https://codesandbox.io/s/crazy-dijkstra-0nsm
 
 - Todo + React Redux [codesandbox](https://codesandbox.io/s/goofy-tree-cp6xt)/[github](https://github.com/iheyunfei/that-enum-redux-example) -->
 
-# 
+# that-enum
+
+Rust-inspired and fully typed Enum with powerful pattern matching.
 
 # Install
 
