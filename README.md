@@ -6,7 +6,7 @@ see `src/__test__` or [codesandbox](https://codesandbox.io/s/crazy-dijkstra-0nsm
 
 # that-enum
 
-Rust-inspired and fully typed Enum with powerful pattern matching.
+Rust-inspired and fully typed Enum with powerful pattern matching in typescript.
 
 [Playground](https://stackblitz.com/edit/typescript-ho9qpu?file=index.ts)
 
