@@ -8,6 +8,8 @@ see `src/__test__` or [codesandbox](https://codesandbox.io/s/crazy-dijkstra-0nsm
 
 Rust-inspired and fully typed Enum with powerful pattern matching.
 
+[Playground](https://stackblitz.com/edit/typescript-ho9qpu?file=index.ts)
+
 # Install
 
 ```
