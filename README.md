@@ -4,8 +4,12 @@
 
 Rust-inspired and strong typed Enum built on `Tagged Union` in TypeScript.
 
-## features
+## Features
 
 - (Exhaustive) Pattern matching
 - Ensure correctness by TypeScript compiler
 - Find errors in compile time
+
+## Usages
+
+See https://github.com/hyf0/tagged-enum/tree/main/tests
