@@ -1,79 +1,83 @@
-import { EnumInstanceBase } from "./shared"
+import { AnyFn } from "./shared";
 
-type AnyFn = (...args: any[]) => any
-type VariantFactory = AnyFn
+type CreateVariant<
+  Name,
+  Descriptor extends AcceptedDescriptor
+> = Descriptor extends AnyFn
+  ? Readonly<{
+      type: Name;
+      payload: ReturnType<Descriptor>;
+    }>
+  : Descriptor extends null
+  ? Readonly<{ type: Name }>
+  : never;
 
-export type VariantNameMark = '$type$'
+type CreateVariantConstructor<
+  Tag,
+  Descriptor extends AcceptedDescriptor,
+  Ret
+> = {
+  (
+    ...params: Descriptor extends AnyFn
+      ? Parameters<Descriptor>
+      : []
+  ): Ret;
+  /**
+   * !: Do not access this variable in runtime
+   */
+  $type: CreateVariant<Tag, Descriptor>;
+};
 
-type VariantConsturctorFromInput<
-  VariantName extends string,
-  VariantInfo extends { [key: string]: VariantFactory | null },
-> = VariantInfo[VariantName] extends VariantFactory
-  ? {
-      (
-        ...params: Parameters<VariantInfo[VariantName]>
-      ): VariantUnionFromInput<VariantInfo>
-      $type$: VariantName
-    }
-  : {
-    (): VariantUnionFromInput<VariantInfo>
-    $type$: VariantName
-  }
+type CreateVariantUnion<Descriptors extends DescriptorsBase> = {
+  [Name in keyof Descriptors]: CreateVariant<Name, Descriptors[Name]>;
+}[keyof Descriptors];
 
-type VariantFromInput<VariantName, VariantConstructor> =
-  VariantConstructor extends VariantFactory
-    ? Readonly<{
-        type: VariantName
-        payload: ReturnType<VariantConstructor>
-      }>
-    : VariantConstructor extends null
-    ? Readonly<{ type: VariantName }>
-    : never
+type CreateEnumInstance<Descriptors extends DescriptorsBase> = {
+  [Tag in keyof Descriptors]: CreateVariantConstructor<
+    Tag,
+    Descriptors[Tag],
+    CreateVariantUnion<Descriptors>
+  >;
+} & {
+  /**
+   * !: Do not access this variable in runtime
+   */
+  $type: CreateVariantUnion<Descriptors>;
+};
 
-type VariantUnionFromInput<VariantInput> = {
-  [VariantName in keyof VariantInput]: VariantFromInput<
-    VariantName,
-    VariantInput[VariantName]
-  >
-}[keyof VariantInput]
+type AcceptedDescriptor = AnyFn | null;
 
-export function Enum<
-  VariantInput extends {
-    [key: string]: null | AnyFn
-  },
->(variantInput: VariantInput) {
-  type VariantUnion = VariantUnionFromInput<VariantInput>
-  type EnumInstance = {
-    [VariantName in keyof VariantInput]: VariantConsturctorFromInput<
-      VariantName & string,
-      VariantInput
-    >
-  }
+type DescriptorsBase = Record<string, AcceptedDescriptor>;
 
-  const instance = Object.create(EnumInstanceBase)
-  for (let variantName in variantInput) {
-    const variantConstructor = variantInput[variantName]
-    if (typeof variantConstructor === 'function') {
-      instance[variantName] = (...args: any[]) => {
-        return Object.freeze({
-          type: variantName,
-          payload: variantConstructor(...args),
-        })
-      }
-    } else if (variantConstructor === null) {
+// TODO: Some name should not used as Tag, such as `_` and `$type`
+
+export function Enum<Descriptors extends DescriptorsBase>(
+  descriptors: Descriptors
+): CreateEnumInstance<Descriptors>;
+export function Enum(
+  rawVariants: Record<string, null | AnyFn>
+): Record<string, AnyFn> {
+  const ret: Record<string, AnyFn> = {};
+
+  Object.entries(rawVariants).forEach(([key, constructor]) => {
+    if (constructor === null) {
       const variant = Object.freeze({
-        type: variantName,
-      })
-      instance[variantName] = () => variant
+        type: key,
+      });
+      ret[key] = () => variant;
+    } else if (typeof constructor === "function") {
+      ret[key] = (...args: any[]) => {
+        return Object.freeze({
+          type: key,
+          payload: constructor(...args),
+        });
+      };
     } else {
       throw new TypeError(
-        `Expect \`null\` | \`function\` but got ${typeof variantConstructor}`,
-      )
+        `Expect \`null\` | \`function\` but got ${typeof constructor} for key "${key}"`
+      );
     }
-  }
+  });
 
-  type Result = EnumInstance & {
-    $type$: VariantUnion
-  }
-  return instance as Result
+  return ret;
 }

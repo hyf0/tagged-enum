@@ -1,52 +1,49 @@
-import { isVariantLike } from './helper'
+import { AnyFn } from "./shared";
 
-type AnyVariant = {
-  type: string
-  payload?: any
+type VariantBase = {
+  type: string;
+  payload?: any;
+};
+
+type ExtractReturnValueOfMatcher<Matcher extends Record<string, AnyFn>> = {
+  [Key in keyof Matcher]: ReturnType<Matcher[Key]>;
+}[keyof Matcher];
+
+
+type CreateExhaustiveMatcherFromVariantUnion<Variant extends VariantBase, ReturnValue> = {
+  [K in Variant["type"]]: Extract<Variant, { type: K }> extends { payload: any }
+    ? (payload: Extract<Variant, { type: K }>["payload"]) => ReturnValue
+    : () => ReturnValue;
+};
+
+type CreateNonExhaustiveMatcherFromVariantUnion<Variant extends VariantBase, ReturnValue> = Partial<CreateExhaustiveMatcherFromVariantUnion<Variant, ReturnValue>> & {
+    _: (payload: unknown) => ReturnValue
 }
-type AnyFn = (...args: any[]) => any
 
-type MapVariantToMatcher<T extends AnyVariant, ReturnValue> = {
-  [K in T['type']]: Extract<T, { type: K }> extends { payload: any }
-    ? (payload: Extract<T, { type: K }>['payload']) => ReturnValue
-    : () => ReturnValue
-}
-
-export function match<Variant extends AnyVariant>(variant: Variant) {
-  // exhaustive matching
-  function matchImpl<ReturnValue>(
-    matcher: Partial<MapVariantToMatcher<Variant, ReturnValue>> & {
-      _: () => ReturnValue
-    },
-  ): ReturnValue
-  function matchImpl<ReturnValue>(
-    matcher: MapVariantToMatcher<Variant, ReturnValue>,
-  ): ReturnValue
-  function matchImpl(matcher: Record<string, AnyFn | undefined>) {
-    let defaultMatchArm = matcher['_']
-    if (!isVariantLike(variant)) {
-      if (defaultMatchArm != null) {
-        return defaultMatchArm()
-      } else {
-        // throw when exhaustive checking
-        throw new TypeError(`Got non-valid varint ${variant} for exhaustive matching, try using \`_\` to catch invalid varint`)
-      }
+export function match<
+  Variant extends VariantBase,
+  Matcher extends CreateExhaustiveMatcherFromVariantUnion<Variant, any>
+>(
+  variant: Variant,
+  matcher: Matcher
+): ExtractReturnValueOfMatcher<typeof matcher>
+export function match<
+  Variant extends VariantBase,
+  Matcher extends  CreateNonExhaustiveMatcherFromVariantUnion<Variant, any>,
+>(
+  variant: Variant,
+  matcher: Matcher
+): ExtractReturnValueOfMatcher<typeof matcher>
+export function match(variant: VariantBase, matcher: Record<string, AnyFn>): unknown {
+  const defaultArm = matcher["_"];
+  const matchedArm = matcher[variant.type];
+  if (matchedArm == null) {
+    if (defaultArm != null) {
+      return defaultArm(variant.payload);
+    } else {
+      throw new TypeError(`No match arm for variant ${variant}.`);
     }
-
-    let matcherArm = matcher[variant.type]
-    if (matcherArm == null) {
-      if (defaultMatchArm == null) {
-        throw new Error(
-          `Doesn't found any match arm for variant ${variant}. Try non-exhaustive matching instead`,
-        )
-      } else {
-        return defaultMatchArm()
-      }
-    }
-
-    return typeof variant.payload === 'undefined'
-      ? matcherArm()
-      : matcherArm(variant.payload)
+  } else {
+    return matchedArm(variant.payload);
   }
-  return matchImpl
 }
