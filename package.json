@@ -4,6 +4,7 @@
   "version": "0.2.0",
   "description": "",
   "author": "Yunfei He <i.heyunfei@gmail.com>",
+  "packageManager": "pnpm@8.0.0",
   "license": "MIT",
   "homepage": "https://github.com/hyf0/tagged-enum#readme",
   "repository": {
